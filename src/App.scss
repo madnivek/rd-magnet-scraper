@@ -1,0 +1,81 @@
+@import "./reset.scss";
+@import url('https://fonts.googleapis.com/css2?family=Open+Sans&display=swap');
+
+$micro: 0.125em;
+$tiny: 0.25em;
+$small: 0.5em;
+$normal: 0.75em;
+$large: 1em;
+$jumbo: 1.5em;
+
+body {
+    min-width: 400px;
+    font-family: 'Open Sans', sans-serif;
+}
+
+form, .results {
+    padding: 1em 2em;
+}
+
+.width-100 {
+    width: 100%;
+}
+
+button {
+    margin: 0;
+    margin-top: $normal;
+    background: lightgray;
+    outline: none;
+    border: none;
+    padding: 0.2em 0.5em;
+}
+
+form {
+    flex-direction: column;
+
+    button {
+        align-self: flex-end;
+        width: fit-content;
+    }
+
+    button, label, input {
+        display: block;
+
+    }
+
+    label {
+        margin-bottom: 0.5em;
+    }
+
+    input {
+        margin-top: 0.5em;
+        border-radius: 5px;
+        outline: none;
+        border: 1px solid gray;
+        padding: 0.2em 0.5em;
+    }
+}
+
+.horizontal-border {
+    margin: m 0;
+    border-bottom: 1px solid gray;
+}
+
+.results {
+    header {
+        margin-bottom: $normal;
+        text-decoration: underline;
+    }
+    table td, table th {
+        padding: $micro $small;
+        text-align: left;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+    tr td:first-child, tr th:first-child {
+        padding-left: 0;
+    }
+    tr td:last-child, tr th:last-child {
+        padding-right: 0;
+    }
+}
