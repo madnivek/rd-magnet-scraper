@@ -1,0 +1,1 @@
+export const RD_API_KEY_KEY = 'RD_API_KEY';

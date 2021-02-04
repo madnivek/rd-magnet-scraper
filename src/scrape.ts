@@ -1,6 +1,11 @@
 import qs from "qs";
 import cheerio from "cheerio";
-import API_KEY from "./apiKey";
+import { RD_API_KEY_KEY } from "./constants";
+
+let RD_API_KEY = '';
+chrome.storage.local.get([RD_API_KEY_KEY], ({ RD_API_KEY: key }) => {
+  RD_API_KEY = key;
+})
 
 const magnetRegex = /magnet:\?xt=urn:btih:[a-zA-Z0-9]*/g;
 
@@ -83,7 +88,7 @@ const getScrapedMagnets: (opts: {
 
 const postTorrents = async (magnet: string): Promise<{ success: boolean }> => {
   const headers = {
-    Authorization: `Bearer ${API_KEY}`,
+    Authorization: `Bearer ${RD_API_KEY}`,
   };
   try {
     const addMagnetRes = await fetch(

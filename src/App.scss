@@ -9,7 +9,8 @@ $large: 1em;
 $jumbo: 1.5em;
 
 body {
-    min-width: 400px;
+    width: 600px;
+    overflow-x: scroll;
     font-family: 'Open Sans', sans-serif;
 }
 
@@ -21,26 +22,35 @@ form, .results {
     width: 100%;
 }
 
-button {
-    margin: 0;
-    margin-top: $normal;
-    background: lightgray;
-    outline: none;
-    border: none;
-    padding: 0.2em 0.5em;
+form button:hover, .fa:hover {
+    cursor: pointer;
+    transform: scale(1.01);
+    transform-origin: center;
 }
 
 form {
-    flex-direction: column;
+    flex-direction: column;        
 
     button {
+        text-transform: uppercase;
+        font-weight: 400;
         align-self: flex-end;
         width: fit-content;
+        margin: $small 0;
+        margin: 0;
+        margin-top: $normal;
+        background: #214a80;
+        color: white;
+        outline: none;
+        border: none;
+        padding: $small 0;
+        margin-top: $jumbo;
+        width: 100%;
+        border-radius: 3px;
     }
 
     button, label, input {
         display: block;
-
     }
 
     label {
@@ -48,11 +58,11 @@ form {
     }
 
     input {
-        margin-top: 0.5em;
+        margin-top: $normal;
         border-radius: 5px;
         outline: none;
         border: 1px solid gray;
-        padding: 0.2em 0.5em;
+        padding: $tiny $normal;
     }
 }
 
@@ -61,21 +71,64 @@ form {
     border-bottom: 1px solid gray;
 }
 
+label, header {
+    font-weight: 600;
+}
+
+.empty {
+    text-align: center;
+    padding: $normal 0;
+}
+
 .results {
     header {
         margin-bottom: $normal;
-        text-decoration: underline;
+        u {
+            font-style: italic;
+        } 
     }
-    table td, table th {
+    .magnet-entry {
+        display: flex;
+        flex-wrap: nowrap;
+        justify-content: space-between;
+        align-items: center;
+        padding: $small 0;
+        border-top: 1px solid lightgray;
+    }
+    .title, .magnet-link {
         padding: $micro $small;
         text-align: left;
         text-overflow: ellipsis;
         white-space: nowrap;
     }
-    tr td:first-child, tr th:first-child {
+    .title:first-child, .magnet-link:first-child {
         padding-left: 0;
     }
-    tr td:last-child, tr th:last-child {
-        padding-right: 0;
+    .title {
+        width: 80%;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+    .fa.fa-magnet {
+        color: #b82e4e;
+        position: relative;
+        &:after {
+            position:absolute;
+            left: -5px;
+            bottom: 0;
+            content: "\f067";
+            color: #d4a600;
+            font-size: 12px;
+        }
+    }
+    .fa.fa-check {
+        color: #2e9455;
+    }
+    .fa.fa-exclamation-triangle {
+        color: #e08122;
+    }
+    .fa.fa-spinner {
+        color: #214a80;
     }
 }

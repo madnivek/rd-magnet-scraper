@@ -7,8 +7,7 @@ module.exports = {
     entry: {
       popup: path.join(srcDir, 'popup.tsx'),
       options: path.join(srcDir, 'options.tsx'),
-      getTabDOM: path.join(srcDir, 'getTabDOM.js'),
-      apiKey: path.join(srcDir, 'apiKey.ts'),
+      getTabDOM: path.join(srcDir, 'getTabDOM.js')
     },
     output: {
         path: path.join(__dirname, "../dist/js"),
@@ -35,8 +34,20 @@ module.exports = {
                     // Translates CSS into CommonJS
                     "css-loader",
                     // Compiles Sass to CSS
-                    "sass-loader",
+                    "sass-loader"
                 ],
+            },
+            {
+                test: /\.(woff(2)?|ttf|eot|svg)(\?v=\d+\.\d+\.\d+)?$/,
+                use: [
+                  {
+                    loader: 'file-loader',
+                    options: {
+                      name: '[name].[ext]',
+                      outputPath: 'fonts/'
+                    }
+                  }
+                ]
             }
         ],
     },

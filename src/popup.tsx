@@ -25,10 +25,10 @@ enum Status {
 }
 
 const STATUS: { [key in Status]: string } = {
-  [Status.idle]: "idle",
-  [Status.loading]: "fetching...",
-  [Status.success]: "successfully added",
-  [Status.error]: "error",
+  [Status.idle]: "fa-magnet",
+  [Status.loading]: "fa-spin fa-spinner",
+  [Status.success]: "fa-check",
+  [Status.error]: "fa-exclamation-triangle",
 };
 
 let currentTabUrl: string = "";
@@ -43,7 +43,7 @@ const App: FunctionComponent = () => {
   const [url, setUrl] = useState("");
   const [from, setFrom] = useState("");
   const [to, setTo] = useState("");
-  const [magnetList, setMagnetList] = useState<MagnetInfo[]>([]);
+  const [magnetList, setMagnetList] = useState<MagnetInfo[]>();
   const [statusByMagnet, setStatusByMagnet] = useState(new Map());
   const activeTabDomRef = useRef<HTMLBodyElement>(null);
 
@@ -92,13 +92,15 @@ const App: FunctionComponent = () => {
 
   const getOnClickMagnet = (href: string) => {
     return async () => {
-      let map = new Map(statusByMagnet);
-      map.set(href, Status.loading);
-      setStatusByMagnet(map);
-      const { success } = await postTorrents(href);
-      map = new Map(map);
-      map.set(href, success ? Status.success : Status.error);
-      setStatusByMagnet(map);
+      if (getStatus(href) === Status.idle) {
+        let map = new Map(statusByMagnet);
+        map.set(href, Status.loading);
+        setStatusByMagnet(map);
+        const { success } = await postTorrents(href);
+        map = new Map(map);
+        map.set(href, success ? Status.success : Status.error);
+        setStatusByMagnet(map);
+      }
     };
   };
 
@@ -112,11 +114,9 @@ const App: FunctionComponent = () => {
         let url = tabs[0].url;
         currentTabUrl = url || ";";
         setUrl(currentTabUrl);
-        // use `url` here inside the callback because it's asynchronous!
       }
     });
 
-    // listen for the customer id from the findId.js script
     chrome.runtime.onMessage.addListener((mssg) => {
       const body = document.createElement("body");
       body.innerHTML = mssg || "";
@@ -128,7 +128,8 @@ const App: FunctionComponent = () => {
     getActiveTabDom();
   }, []);
 
-  const magnetMap = new Map(magnetList.map((info) => [info.href, info]));
+  const list = magnetList || [];
+  const magnetMap = new Map(list.map((info) => [info.href, info]));
   const uniqueMagnetList = [...magnetMap.values()];
 
   return (
@@ -160,29 +161,32 @@ const App: FunctionComponent = () => {
             onChange={handleOnChangeTo}
           />
         </label>
-        <button type="submit">show page</button>
+        <button type="submit">find magnet links</button>
       </form>
       <div className="horizontal-border" />
       {uniqueMagnetList.length > 0 && (
         <div className="results">
-          <header>Results</header>
-          <table>
-            <tbody>
-              {uniqueMagnetList.map(({ title, href }) => {
-                return (
-                  <tr className="magnet-entry" key={href}>
-                    <td className="title">{title}:</td>
-                    <td className="magnet-link">
-                      <button onClick={getOnClickMagnet(href)}>add</button>
-                    </td>
-                    <td>{STATUS[getStatus(href)]}</td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
+          <header>
+            Results for <u>{url}</u>
+            {
+              from && to && <>
+              from <u>{from}</u> to <u>{to}</u>
+              </>
+            }
+          </header>
+          {uniqueMagnetList.map(({ title, href }) => {
+            return (
+              <div className="magnet-entry" key={href}>
+                <div className="title">{title}</div>
+                <div><i onClick={getOnClickMagnet(href)} className={`fa ${STATUS[getStatus(href)]}`} /></div>
+              </div>
+            );
+          })}
         </div>
       )}
+      {
+        uniqueMagnetList.length === 0 && <div className="empty">No results</div>
+      }
     </>
   );
 };

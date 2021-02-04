@@ -1,72 +1,44 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, ChangeEventHandler, FunctionComponent } from "react";
 import ReactDOM from "react-dom";
+import { RD_API_KEY_KEY } from "./constants";
 
-const Options = () => {
-  const [color, setColor] = useState<string>();
-  const [status, setStatus] = useState<string>();
-  const [like, setLike] = useState<boolean>();
+const Options: FunctionComponent = () => {
+  const [savedApiKey, setSavedApiKey] = useState<string>();
+  const [apiKey, setApiKey] = useState<string>('');
+
+  const handleChangeApiKey: ChangeEventHandler<HTMLInputElement> = e => {
+    setApiKey(e.target.value)
+  }
+
+  const handleSubmitApiKey = () => {
+    setSavedApiKey(undefined);
+    chrome.storage.local.set({ [RD_API_KEY_KEY]: apiKey }, () => {
+      setSavedApiKey(apiKey);
+    });
+  }
 
   useEffect(() => {
-    // Restores select box and checkbox state using the preferences
-    // stored in chrome.storage.
-    chrome.storage.sync.get(
-      {
-        favoriteColor: "red",
-        likesColor: true,
-      },
-      (items) => {
-        setColor(items.favoriteColor);
-        setLike(items.likesColor);
-      }
-    );
+    try {
+      chrome.storage.local.get([RD_API_KEY_KEY], res => {
+        setSavedApiKey(res.RD_API_KEY_KEY);
+      })
+    } catch (e) {
+      console.log(e);
+    }
+    
   }, []);
 
-  const saveOptions = () => {
-    // Saves options to chrome.storage.sync.
-    chrome.storage.sync.set(
-      {
-        favoriteColor: color,
-        likesColor: like,
-      },
-      () => {
-        // Update status to let user know options were saved.
-        setStatus("Options saved.");
-        const id = setTimeout(() => {
-          setStatus(undefined);
-        }, 1000);
-        return () => clearTimeout(id);
-      }
-    );
-  };
-
-  return (
-    <>
-      <div>
-        Favorite color:&nbsp;
-        <select
-          value={color}
-          onChange={(event) => setColor(event.target.value)}
-        >
-          <option value="red">red</option>
-          <option value="green">green</option>
-          <option value="blue">blue</option>
-          <option value="yellow">yellow</option>
-        </select>
-      </div>
-      <div>
-        <label>
-          <input
-            type="checkbox"
-            checked={like}
-            onChange={(event) => setLike(event.target.checked)}
-          />
-          I like colors.
-        </label>
-      </div>
-      <div>{status}</div>
-      <button onClick={saveOptions}>Save</button>
-    </>
-  );
+  return <div className="options-container">
+    <form onSubmit={handleSubmitApiKey}>
+      <label>
+        Private RD Api Key:
+        <input onChange={handleChangeApiKey} type="password" value={apiKey} />
+      </label>
+      <button type="submit">
+        save api key
+      </button>
+    </form>
+  </div>
 };
 
 ReactDOM.render(
