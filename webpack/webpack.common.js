@@ -7,7 +7,7 @@ module.exports = {
     entry: {
       popup: path.join(srcDir, 'popup.tsx'),
       options: path.join(srcDir, 'options.tsx'),
-      getTabDOM: path.join(srcDir, 'getTabDOM.js')
+      scrapeTabMagnets: path.join(srcDir, 'scrape-tab-magnets.js'),
     },
     output: {
         path: path.join(__dirname, "../dist/js"),

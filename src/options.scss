@@ -1,0 +1,38 @@
+@import "./base.scss";
+
+#root {
+    width: 100%;
+    form {
+        flex-direction: row;
+        display: flex;
+        input {
+            flex: 1;
+            margin: 0 $normal 0 0;
+        }
+        button {
+            margin: 0;
+        }
+        label, input, button {
+            display: inline-block;
+        }
+        button {
+            width: fit-content;
+            padding: $small $normal;
+        }
+    }
+    .api-key-saved {
+        width: 100%;
+        text-align: center;
+        display: flex;
+        justify-content: space-between;
+        padding: $large $jumbo;
+        span {
+            cursor: pointer;
+            color: red;
+            &:hover {
+                font-weight: 900;
+            }
+        }
+    }
+
+}

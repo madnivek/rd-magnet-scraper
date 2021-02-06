@@ -1,8 +1,8 @@
 {
   "manifest_version": 2,
 
-  "name": "Duy's Magnet Scraper for Real Debrid",
-  "description": "Magnet Scraper for Real Debrid",
+  "name": "Duy's RD Magnet Scraper",
+  "description": "RD Magnet Scraper",
   "version": "1.0",
 
   "options_ui": {
@@ -18,7 +18,7 @@
   "content_scripts": [
       {
           "matches": ["<all_urls>"],
-          "js": ["js/vendor.js", "js/getTabDOM.js"]
+          "js": ["js/vendor.js", "js/scrapeTabMagnets.js"]
       }
   ],
 

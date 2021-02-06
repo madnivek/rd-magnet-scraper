@@ -5,17 +5,13 @@ import React, {
   ChangeEventHandler,
   FormEventHandler,
   useEffect,
-  useRef,
 } from "react";
 import ReactDOM from "react-dom";
-import "./App.scss";
-import {
-  getScrapedMagnets,
-  MagnetInfo,
-  postTorrents,
-  scrapeLinkFromElement,
-  scrapeLinkFromUrl,
-} from "./scrape";
+import "./popup.scss";
+import { getScrapedMagnets, MagnetInfo, magnetRegex } from "./scrape";
+import qs from "qs";
+import copy from "clipboard-copy";
+import classNames from 'classnames';
 
 enum Status {
   "idle" = "idle",
@@ -33,19 +29,40 @@ const STATUS: { [key in Status]: string } = {
 
 let currentTabUrl: string = "";
 
-const getActiveTabDom = () => {
+const getActiveTabMagnetList = () => {
   chrome.tabs.executeScript({
-    file: "js/getTabDOM.js",
+    file: "js/scrapeTabMagnets.js",
   });
 };
+
+import { RD_API_KEY_KEY } from "./constants";
+import RealDebridClient from "./rd";
+
+let RD_API_KEY = "";
+let realDebrid: RealDebridClient;
+chrome.storage.local.get([RD_API_KEY_KEY], ({ RD_API_KEY: key }) => {
+  RD_API_KEY = key;
+  realDebrid = new RealDebridClient(key);
+});
+
+interface StreamInfo {
+  name: string;
+  link: string;
+}
 
 const App: FunctionComponent = () => {
   const [url, setUrl] = useState("");
   const [from, setFrom] = useState("");
   const [to, setTo] = useState("");
+  const [isCopied, setIsCopied] = useState(false);
   const [magnetList, setMagnetList] = useState<MagnetInfo[]>();
   const [statusByMagnet, setStatusByMagnet] = useState(new Map());
-  const activeTabDomRef = useRef<HTMLBodyElement>(null);
+  const [streamableLinksByMagnet, setStreamableLinksByMagnet] = useState<
+    Map<string, StreamInfo[]>
+  >(new Map());
+  const [linksByMagnet, setLinksByMagnet] = useState<Map<string, string[]>>(
+    new Map()
+  );
 
   const isCustomURL = currentTabUrl !== url;
 
@@ -75,15 +92,14 @@ const App: FunctionComponent = () => {
       e.preventDefault();
       const fromInt = from ? parseInt(from, 10) : undefined;
       const toInt = from ? parseInt(to, 10) : undefined;
-      if (activeTabDomRef.current && !isCustomURL) {
-        setMagnetList(scrapeLinkFromElement(activeTabDomRef.current));
+      if (!isCustomURL) {
+        getActiveTabMagnetList();
       } else if (isCustomURL) {
         const magnetLinks = await getScrapedMagnets({
           url,
           from: fromInt,
           to: toInt,
         });
-        console.log(magnetLinks);
         setMagnetList(magnetLinks);
       }
     },
@@ -91,22 +107,98 @@ const App: FunctionComponent = () => {
   );
 
   const getOnClickMagnet = (href: string) => {
-    return async () => {
+    return () => {
       if (getStatus(href) === Status.idle) {
-        let map = new Map(statusByMagnet);
-        map.set(href, Status.loading);
-        setStatusByMagnet(map);
-        const { success } = await postTorrents(href);
-        map = new Map(map);
-        map.set(href, success ? Status.success : Status.error);
-        setStatusByMagnet(map);
+        setStatusByMagnet((prev) => {
+          const map = new Map(prev);
+          map.set(href, Status.loading);
+          return map;
+        });
+        postTorrents(href, true);
       }
     };
   };
 
-  const getStatus = (href: string): Status => {
-    return statusByMagnet.get(href) || Status.idle;
+  const postTorrents = async (
+    magnet: string,
+    shouldFetchVideoLinks?: boolean
+  ): Promise<void> => {
+    let streamingLinks: StreamInfo[] = [];
+    try {
+      const addMagnetRes = await realDebrid.addMagnet(magnet);
+      if (!addMagnetRes.success) {
+        throw new Error("Could not post magnet");
+      }
+      const { id: torrentId } = addMagnetRes.json;
+      const selectFilesRes = await realDebrid.selectAllFiles(torrentId);
+      if (!selectFilesRes.success) {
+        throw new Error("Magnet added but could not select files");
+      }
+      const torrentInfoRes = await realDebrid.getTorrentInfo(torrentId);
+      if (!torrentInfoRes.success) {
+        throw new Error("Magnet added but could not get torrent info");
+      }
+      const { links } = torrentInfoRes.json;
+      if (shouldFetchVideoLinks) {
+        const unrestrictFilesRes = await Promise.all(
+          links.map((link) => realDebrid.unrestrictLink(link))
+        );
+        await Promise.all(
+          unrestrictFilesRes.map(async (res) => {
+            if (res.success && res.json.streamable) {
+              const url = `https://real-debrid.com/streaming-${res.json.id}`;
+              streamingLinks.push({ name: res.json.filename, link: url });
+            }
+          })
+        );
+      }
+      if (links && links.length > 0) {
+        setLinksByMagnet((prev) => {
+          const map = new Map(prev);
+          map.set(magnet, links);
+          return map;
+        });
+      }
+      if (shouldFetchVideoLinks && streamingLinks.length > 0) {
+        setStreamableLinksByMagnet((prev) => {
+          const map = new Map(prev);
+          map.set(magnet, streamingLinks);
+          return map;
+        });
+      }
+      setStatusByMagnet((prev) => {
+        const map = new Map(prev);
+        map.set(magnet, Status.success);
+        return map;
+      });
+    } catch (e) {
+      setStatusByMagnet((prev) => {
+        const map = new Map(prev);
+        map.set(magnet, Status.error);
+        return map;
+      });
+      alert(e.message);
+    }
   };
+
+  const getStatus = useCallback(
+    (href: string): Status => {
+      return statusByMagnet.get(href) || Status.idle;
+    },
+    [statusByMagnet]
+  );
+
+  const copyAllMagnetLinks = useCallback(async (text: string) => {
+    try {
+      await copy(text);
+      setIsCopied(true);
+      setTimeout(() => {
+        setIsCopied(false);
+      }, 500)
+    } catch {
+      console.log('could not copy');
+    }
+  }, []);
 
   useEffect(() => {
     chrome.tabs.query({ active: true, lastFocusedWindow: true }, (tabs) => {
@@ -117,20 +209,44 @@ const App: FunctionComponent = () => {
       }
     });
 
-    chrome.runtime.onMessage.addListener((mssg) => {
-      const body = document.createElement("body");
-      body.innerHTML = mssg || "";
-      // @ts-ignore
-      activeTabDomRef.current = body;
-      setMagnetList(scrapeLinkFromElement(body));
+    chrome.runtime.onMessage.addListener(async (mssg) => {
+      const { hrefs, iframeSources } = JSON.parse(mssg) as { hrefs: string[], iframeSources: string[] };
+      let list = hrefs.reduce<MagnetInfo[]>((acc, href) => {
+        const matches = href.match(magnetRegex);
+        if (matches && matches[0]) {
+          let title = "";
+          const params = qs.parse(href);
+          if (typeof params.dn === "string") {
+            title = params.dn;
+          }
+          acc.push({ href: matches[0], title });
+        }
+        return acc;
+      }, []);
+      console.log(iframeSources);
+      if (iframeSources) {
+        const results = await Promise.all(iframeSources.map(source => getScrapedMagnets({ url: source })));
+        list = results.reduce<MagnetInfo[]>((acc, result) => {
+          acc = [...acc, ...result];
+          return acc;
+        }, list)
+      }
+      setMagnetList(list);
     });
-
-    getActiveTabDom();
+    getActiveTabMagnetList();
   }, []);
 
   const list = magnetList || [];
   const magnetMap = new Map(list.map((info) => [info.href, info]));
   const uniqueMagnetList = [...magnetMap.values()];
+
+  if (!RD_API_KEY) {
+    return (
+      <div className="no-api-key">
+        Please configure your real debrid api token in options menu.
+      </div>
+    );
+  }
 
   return (
     <>
@@ -168,25 +284,70 @@ const App: FunctionComponent = () => {
         <div className="results">
           <header>
             Results for <u>{url}</u>
-            {
-              from && to && <>
-              from <u>{from}</u> to <u>{to}</u>
+            {from && to && (
+              <>
+                from <u>{from}</u> to <u>{to}</u>
               </>
-            }
+            )}
           </header>
-          {uniqueMagnetList.map(({ title, href }) => {
+          {uniqueMagnetList.map(({ title, href }, idx) => {
+            const links = linksByMagnet.get(href);
+            const streamableLinks = streamableLinksByMagnet.get(href);
             return (
               <div className="magnet-entry" key={href}>
-                <div className="title">{title}</div>
-                <div><i onClick={getOnClickMagnet(href)} className={`fa ${STATUS[getStatus(href)]}`} /></div>
+                <div className="magnet-info">
+                  <div className="title">{title}</div>
+                  <div>
+                    <i
+                      onClick={getOnClickMagnet(href)}
+                      className={`clickable fa ${STATUS[getStatus(href)]}`}
+                    />
+                  </div>
+                </div>
+                {links && (
+                  <div className="links position-relative">
+                    <div className="link-header">Available Download Links:</div>
+                    <span
+                      className={classNames('copy-text clickable position-absolute', { 'fa fa-copy': !isCopied })}
+                      onClick={() => copyAllMagnetLinks(links.join("\n"))}
+                    >
+                      {isCopied && 'copied!'}
+                    </span>
+                    {links.map((link) => {
+                      return (
+                        <div className="link" key={link}>
+                          {link}
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+                {streamableLinks && (
+                  <div className="links">
+                    <div className="link-header streaming">
+                      Available Streaming Links:
+                    </div>
+                    {streamableLinks.map((link) => {
+                      return (
+                        <a
+                          className="link"
+                          key={link.link}
+                          href={link.link}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                        >
+                          {link.name}
+                        </a>
+                      );
+                    })}
+                  </div>
+                )}
               </div>
             );
           })}
         </div>
       )}
-      {
-        uniqueMagnetList.length === 0 && <div className="empty">No results</div>
-      }
+      {uniqueMagnetList.length === 0 && <div className="empty">No results</div>}
     </>
   );
 };

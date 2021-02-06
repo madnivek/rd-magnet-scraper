@@ -1,0 +1,85 @@
+@import "./base.scss";
+
+.no-api-key {
+    text-align: center;
+    padding: $large 0;
+}
+
+.results {
+    header {
+        margin-bottom: $normal;
+        u {
+            font-style: italic;
+        }
+    }
+    .magnet-entry {
+        border-top: 1px solid lightgray;
+        padding: $small 0;
+        .copy-text {
+            top: $small;
+            right: $small;
+        }
+    }
+    .magnet-entry .links {
+        background: lightgray;
+        border: 1px solid lightgray;
+        margin: $normal $large;
+        padding: $small;
+        padding-bottom: 0;
+        .link-header {
+            text-decoration: underline;
+            font-style: italic;
+            padding-bottom: $normal;
+        }
+        .link {
+            padding-bottom: $small;
+            display: block;
+        }
+    }
+    .magnet-entry .magnet-info {
+        display: flex;
+        flex-wrap: nowrap;
+        justify-content: space-between;
+        align-items: center;
+    }
+    .title, .magnet-link {
+        padding: $micro $small;
+        text-align: left;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+    .title:first-child, .magnet-link:first-child {
+        padding-left: 0;
+    }
+    .title {
+        width: 80%;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+    .fa.fa-magnet {
+        color: #b82e4e;
+        position: relative;
+        &:after {
+            position:absolute;
+            left: -5px;
+            bottom: 0;
+            content: "\f067";
+            color: #d4a600;
+            font-size: 12px;
+        }
+    }
+    .fa.fa-check {
+        color: #2e9455;
+    }
+    .fa.fa-exclamation-triangle {
+        color: #e08122;
+    }
+    .fa.fa-spinner {
+        color: #214a80;
+    }
+}
+
+.results, .empty {
+    border-top: 1px solid lightgray;
+}

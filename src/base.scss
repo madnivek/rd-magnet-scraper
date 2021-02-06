@@ -1,0 +1,94 @@
+@import "./reset.scss";
+@import url('https://fonts.googleapis.com/css2?family=Open+Sans&display=swap');
+
+$micro: 0.125em;
+$tiny: 0.25em;
+$small: 0.5em;
+$normal: 0.75em;
+$large: 1em;
+$jumbo: 1.5em;
+
+body {
+  margin: 0;
+  width: 600px;
+  overflow-x: scroll;
+  font-family: 'Open Sans', sans-serif;
+}
+
+#root {
+
+  .clickable:hover, .clickable:after:hover {
+    cursor: pointer;
+    transform: scale(1.02);
+  }
+
+  .position-relative {
+    position: relative;
+  }
+
+  .position-absolute {
+    position: absolute;
+  }
+
+  form, .results {
+    padding: $large $jumbo;
+  }
+
+  .width-100 {
+    width: 100%;
+  }
+
+  form button:hover, .fa:hover {
+    cursor: pointer;
+    transform: scale(1.01);
+    transform-origin: center;
+  }
+
+  form {
+    flex-direction: column;
+
+    button {
+      text-transform: uppercase;
+      font-weight: 400;
+      align-self: flex-end;
+      width: fit-content;
+      margin: $small 0;
+      margin: 0;
+      margin-top: $normal;
+      background: #214a80;
+      color: white;
+      outline: none;
+      border: none;
+      padding: $small 0;
+      margin-top: $jumbo;
+      width: 100%;
+      border-radius: 3px;
+    }
+
+    button, label, input {
+      display: block;
+    }
+
+    label {
+      margin-bottom: 0.5em;
+    }
+
+    input {
+      margin-top: $normal;
+      border-radius: 5px;
+      outline: none;
+      border: 1px solid gray;
+      padding: $tiny $normal;
+    }
+  }
+
+  label, header {
+    font-weight: 600;
+  }
+
+  .empty {
+    text-align: center;
+    padding: $normal 0;
+  }
+}
+
