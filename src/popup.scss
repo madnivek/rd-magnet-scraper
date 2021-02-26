@@ -8,9 +8,6 @@
 .results {
     header {
         margin-bottom: $normal;
-        u {
-            font-style: italic;
-        }
     }
     .magnet-entry {
         border-top: 1px solid lightgray;
@@ -25,37 +22,21 @@
         border: 1px solid lightgray;
         margin: $normal $large;
         padding: $small;
-        padding-bottom: 0;
         .link-header {
-            text-decoration: underline;
-            font-style: italic;
             padding-bottom: $normal;
         }
         .link {
             padding-bottom: $small;
-            display: block;
         }
-    }
-    .magnet-entry .magnet-info {
-        display: flex;
-        flex-wrap: nowrap;
-        justify-content: space-between;
-        align-items: center;
     }
     .title, .magnet-link {
         padding: $micro $small;
-        text-align: left;
-        text-overflow: ellipsis;
-        white-space: nowrap;
     }
     .title:first-child, .magnet-link:first-child {
         padding-left: 0;
     }
     .title {
         width: 80%;
-        overflow: hidden;
-        text-overflow: ellipsis;
-        white-space: nowrap;
     }
     .fa.fa-magnet {
         color: #b82e4e;

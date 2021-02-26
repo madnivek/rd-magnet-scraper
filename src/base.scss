@@ -1,3 +1,4 @@
+@import "./foundation-prototype.min.css";
 @import "./reset.scss";
 @import url('https://fonts.googleapis.com/css2?family=Open+Sans&display=swap');
 
@@ -22,20 +23,8 @@ body {
     transform: scale(1.02);
   }
 
-  .position-relative {
-    position: relative;
-  }
-
-  .position-absolute {
-    position: absolute;
-  }
-
   form, .results {
     padding: $large $jumbo;
-  }
-
-  .width-100 {
-    width: 100%;
   }
 
   form button:hover, .fa:hover {

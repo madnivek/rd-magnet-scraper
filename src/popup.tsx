@@ -12,6 +12,9 @@ import { getScrapedMagnets, MagnetInfo, magnetRegex } from "./scrape";
 import qs from "qs";
 import copy from "clipboard-copy";
 import classNames from 'classnames';
+import { RD_API_KEY_KEY } from "./constants";
+import RealDebridClient from "./rd";
+import OptionsMenu from "./options-menu"; 
 
 enum Status {
   "idle" = "idle",
@@ -34,9 +37,6 @@ const getActiveTabMagnetList = () => {
     file: "js/scrapeTabMagnets.js",
   });
 };
-
-import { RD_API_KEY_KEY } from "./constants";
-import RealDebridClient from "./rd";
 
 let RD_API_KEY = "";
 let realDebrid: RealDebridClient;
@@ -212,10 +212,11 @@ const App: FunctionComponent = () => {
     chrome.runtime.onMessage.addListener(async (mssg) => {
       const { hrefs, iframeSources } = JSON.parse(mssg) as { hrefs: string[], iframeSources: string[] };
       let list = hrefs.reduce<MagnetInfo[]>((acc, href) => {
-        const matches = href.match(magnetRegex);
+        const decodedHref = decodeURIComponent(href);
+        const matches = decodedHref.match(magnetRegex);
         if (matches && matches[0]) {
           let title = "";
-          const params = qs.parse(href);
+          const params = qs.parse(decodedHref);
           if (typeof params.dn === "string") {
             title = params.dn;
           }
@@ -242,9 +243,7 @@ const App: FunctionComponent = () => {
 
   if (!RD_API_KEY) {
     return (
-      <div className="no-api-key">
-        Please configure your real debrid api token in options menu.
-      </div>
+      <OptionsMenu />
     );
   }
 
@@ -295,9 +294,9 @@ const App: FunctionComponent = () => {
             const streamableLinks = streamableLinksByMagnet.get(href);
             return (
               <div className="magnet-entry" key={href}>
-                <div className="magnet-info">
-                  <div className="title">{title}</div>
-                  <div>
+                <div className="magnet-info grid-x grid-margin-x">
+                  <div className="title cell auto">{title}</div>
+                  <div className="cell shrink">
                     <i
                       onClick={getOnClickMagnet(href)}
                       className={`clickable fa ${STATUS[getStatus(href)]}`}

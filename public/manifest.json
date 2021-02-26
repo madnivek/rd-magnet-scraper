@@ -31,8 +31,8 @@
   ],
 
   "permissions": [
+    "<all_urls>",
     "tabs",
-    "storage",
-    "<all_urls>"
+    "storage"
   ]
 }

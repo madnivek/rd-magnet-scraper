@@ -17,9 +17,10 @@ const scrapeLinkFromUrl = async (
     const html = await getRes.text();
     const $ = cheerio.load(html);
     $("a").each((i, el) => {
-      const href = $(el).attr("href");
+      let href = $(el).attr("href");
       let title = $(el).attr("title") || "unknown file name";
       if (href) {
+        href = decodeURIComponent(href);
         const matches = href.match(magnetRegex);
         if (matches && matches[0]) {
           const params = qs.parse(href);
